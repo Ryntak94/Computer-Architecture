@@ -5,30 +5,26 @@ import sys
 class CPU:
     """Main CPU class."""
 
+
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0]*256
+        self.reg = [0]*8
 
-    def load(self):
+    def ram_read(self, address):
+        return self.ram[address]
+
+    def ram_write(self, value, address):
+        self.ram[address] = value
+
+    def load(self, file):
         """Load a program into memory."""
-
         address = 0
-
-        # For now, we've just hardcoded a program:
-
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
-
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        f = open(file, "r")
+        for i in f:
+            if i[0] == "0" or i[0] == "1":
+                self.ram[address] = int("0b"+i[0:8],2)
+                address += 1
 
 
     def alu(self, op, reg_a, reg_b):
@@ -62,4 +58,28 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        running = True
+        PC = 0
+        HALT = 0b00000001
+        LDI = 0b10000010
+        PRN = 0b01000111
+        while running:
+            command = self.ram[PC]
+
+            if command == LDI:
+                address = self.ram[PC + 1]
+                value = self.ram[PC + 2]
+                PC += 3
+                self.ram_write(value, address)
+
+            elif command == PRN:
+                address = self.ram[PC + 1]
+                PC += 2
+                print(self.ram_read(address))
+
+            elif command == HALT:
+                running = False
+
+            else:
+                print('command not recognized: {}'.format(command))
+                running = False
