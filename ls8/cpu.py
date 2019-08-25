@@ -15,6 +15,7 @@ class CPU:
         self.PRN = 0b01000111
         self.pc = 0
         self.running = True
+        self.MUL = 0b10100010
 
     def ram_read(self, address):
         return self.ram[address]
@@ -38,6 +39,8 @@ class CPU:
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         #elif op == "SUB": etc
+        elif op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -78,8 +81,17 @@ class CPU:
                 self.pc += 2
                 print(self.reg[address])
 
+            elif command == self.MUL:
+                address1 = self.ram_read(self.pc + 1)
+                address2 = self.ram_read(self.pc + 2)
+                self.alu("MUL", address1, address2)
+                print(self.reg[self.pc + 1])
+                self.pc += 3
+
             elif command == self.HALT:
                 self.running = False
+
+
 
             else:
                 print('command not recognized: {}'.format(command))
