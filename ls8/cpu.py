@@ -10,6 +10,11 @@ class CPU:
         """Construct a new CPU."""
         self.ram = [0]*256
         self.reg = [0]*8
+        self.HALT = 0b00000001
+        self.LDI = 0b10000010
+        self.PRN = 0b01000111
+        self.pc = 0
+        self.running = True
 
     def ram_read(self, address):
         return self.ram[address]
@@ -17,13 +22,13 @@ class CPU:
     def ram_write(self, value, address):
         self.ram[address] = value
 
-    def load(self, file):
+    def load(self):
         """Load a program into memory."""
         address = 0
-        f = open(file, "r")
+        f = open(sys.argv[1], "r")
         for i in f:
             if i[0] == "0" or i[0] == "1":
-                self.ram[address] = int("0b"+i[0:8],2)
+                self.ram_write(int("0b"+i[0:8],2), address)
                 address += 1
 
 
@@ -58,28 +63,24 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        running = True
-        PC = 0
-        HALT = 0b00000001
-        LDI = 0b10000010
-        PRN = 0b01000111
-        while running:
-            command = self.ram[PC]
 
-            if command == LDI:
-                address = self.ram[PC + 1]
-                value = self.ram[PC + 2]
-                PC += 3
-                self.ram_write(value, address)
+        while self.running:
+            command = self.ram_read(self.pc)
 
-            elif command == PRN:
-                address = self.ram[PC + 1]
-                PC += 2
-                print(self.ram_read(address))
+            if command == self.LDI:
+                address = self.ram_read(self.pc + 1)
+                value = self.ram_read(self.pc + 2)
+                self.pc += 3
+                self.reg[address] = value
 
-            elif command == HALT:
-                running = False
+            elif command == self.PRN:
+                address = self.ram_read(self.pc + 1)
+                self.pc += 2
+                print(self.reg[address])
+
+            elif command == self.HALT:
+                self.running = False
 
             else:
                 print('command not recognized: {}'.format(command))
-                running = False
+                self.running = False
