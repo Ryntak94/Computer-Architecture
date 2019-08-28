@@ -16,6 +16,8 @@ class CPU:
         self.pc = 0
         self.running = True
         self.MUL = 0b10100010
+        self.PUSH = 0b01000101
+        self.POP = 0b01000110
 
     def ram_read(self, address):
         return self.ram[address]
@@ -69,7 +71,8 @@ class CPU:
 
         while self.running:
             command = self.ram_read(self.pc)
-
+            ops = command>>6
+            # print(ops)
             if command == self.LDI:
                 address = self.ram_read(self.pc + 1)
                 value = self.ram_read(self.pc + 2)
@@ -88,10 +91,27 @@ class CPU:
                 print(self.reg[self.pc + 1])
                 self.pc += 3
 
+            elif command == self.PUSH:
+                self.reg[7] -= 1
+                SP = self.reg[7]
+
+                reg_address = self.ram_read(self.pc + 1)
+                value = self.reg[reg_address]
+
+                self.ram_write(value, SP)
+                self.pc += 2
+
+            elif command == self.POP:
+                SP = self.reg[7]
+                value = self.ram_read(SP)
+                reg_address = self.ram_read(self.pc + 1)
+                self.reg[reg_address] = value
+
+                self.reg[7] += 1
+                self.pc += 2
+
             elif command == self.HALT:
                 self.running = False
-
-
 
             else:
                 print('command not recognized: {}'.format(command))
