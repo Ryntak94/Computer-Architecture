@@ -18,6 +18,9 @@ class CPU:
         self.MUL = 0b10100010
         self.PUSH = 0b01000101
         self.POP = 0b01000110
+        self.CALL = 0b01010000
+        self.RET = 0b00010001
+        self.ADD = 0b10100000
 
     def ram_read(self, address):
         return self.ram[address]
@@ -84,6 +87,13 @@ class CPU:
                 self.pc += 2
                 print(self.reg[address])
 
+            elif command == self.ADD:
+                address1 = self.ram_read(self.pc + 1)
+                address2 = self.ram_read(self.pc + 2)
+                self.alu("ADD", address1, address2)
+                print(self.reg[self.pc + 1])
+                self.pc += 3
+
             elif command == self.MUL:
                 address1 = self.ram_read(self.pc + 1)
                 address2 = self.ram_read(self.pc + 2)
@@ -109,6 +119,23 @@ class CPU:
 
                 self.reg[7] += 1
                 self.pc += 2
+
+            elif command == self.CALL:
+                reg_address = self.ram_read(self.pc + 1)
+                address_to_jump_to = self.reg[reg_address]
+
+                next_instruction_address = self.pc + 2
+                self.reg[7] - (self.reg[7] - 1) % 255
+                SP = self.reg[7]
+                self.ram_write(next_instruction_address, SP)
+
+                self.pc = address_to_jump_to
+
+            elif command == self.RET:
+                SP = self.reg[7]
+                address_to_return_to = self.ram_read(SP)
+
+                self.pc = address_to_return_to
 
             elif command == self.HALT:
                 self.running = False
